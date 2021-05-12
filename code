@@ -55,9 +55,6 @@ class Stack:
     def Push(self, item):
         self.items.append(item)
 
-    def Look(self):
-        return self.items
-
 def CheckIfOperators(Expression, Operations):
     for i in Expression:
         if i in Operations:
@@ -113,7 +110,6 @@ def SortPostfix(Postfix, Operations):
     for i in Chunks:
         if CheckIfOperators(i, Operators):
             op = Operators.get(i)
-            stack.Look()
             Num1 = stack.Pop()
             Num2 = stack.Pop()
             Result = op(float(Num2), float(Num1))
