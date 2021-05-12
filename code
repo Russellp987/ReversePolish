@@ -1,0 +1,137 @@
+import operator
+Operations = ["-", "+", "*", "/", "^"]
+Inserts = []
+
+Operators = {
+    "+": operator.add,
+    "-": operator.sub,
+    "*": operator.mul,
+    "/": operator.truediv,
+    "^": operator.pow
+}
+
+class Node:
+    def __init__(self, data):
+
+        self.left = None
+        self.right = None
+        self.data = data
+
+    def insert(self, data, index, Infix):
+        if self.data:
+            index2 = Infix.index(self.data)
+            if index < index2:
+                if self.left is None:
+                    self.left = Node(data)
+                else:
+                    self.left.insert(data, index, Infix)
+            elif index > index2:
+                if self.right is None:
+                    self.right = Node(data)
+                else:
+                    self.right.insert(data, index, Infix)
+        else:
+            self.data = data
+
+    def PostorderTraversal(self, Root):
+        List = []
+        if Root.left != None:
+            List = self.PostorderTraversal(Root.left)
+        if Root.right != None:
+            List = List + self.PostorderTraversal(Root.right)
+        List.append(Root.data)
+        return List
+
+class Stack:
+    def __init__(self):
+        self.items = []
+
+    def IsEmpty(self):
+        return self.items == []
+
+    def Pop(self):
+        return self.items.pop()
+
+    def Push(self, item):
+        self.items.append(item)
+
+    def Look(self):
+        return self.items
+
+def CheckIfOperators(Expression, Operations):
+    for i in Expression:
+        if i in Operations:
+            return True
+    return False
+
+def GetListOfOperators(Expression, Operations):
+    Expression = Expression.replace(" ","")
+    OperatorsInExpression = []
+    for i in Operations:
+        count = Expression.count(i)
+        for j in range(count):
+            OperatorsInExpression.append(i)
+    IndOfBrackets = [i for i, x in enumerate(Expression) if x == "("]
+    for i in range(len(IndOfBrackets)):
+        OperatorFound = False
+        count = 0
+        while not OperatorFound:
+            count += 1
+            OperatorFound = CheckIfOperators(Expression[int(IndOfBrackets[i]) + count], Operations)
+        OperatorsInExpression.remove(Expression[int(IndOfBrackets[i])+count])
+        OperatorsInExpression.append(Expression[int(IndOfBrackets[i])+count])
+    return OperatorsInExpression
+
+def MakeTree(Expression, Inserts):
+    OperatorsInExpression = GetListOfOperators(Expression, Operations)
+    LowestPrecedence = OperatorsInExpression[0]
+    index = Expression.index(LowestPrecedence)
+    Inserts.append(LowestPrecedence)
+    Start = Expression[:index]
+    End = Expression[index+1:]
+    StartOperations = CheckIfOperators(Start, Operations)
+    EndOperations = CheckIfOperators(End, Operations)
+    if StartOperations:
+        MakeTree(Start, Inserts)
+    if not StartOperations:
+        Start = Start.replace("(","")
+        Start = Start.replace(")","")
+        Start = Start.replace(" ","")
+        Inserts.append(Start)
+    if EndOperations:
+        MakeTree(End, Inserts)
+    if not EndOperations:
+        End = End.replace("(","")
+        End = End.replace(")","")
+        End = End.replace(" ","")
+        Inserts.append(End)
+    return Inserts
+
+def SortPostfix(Postfix, Operations):
+    Chunks = Postfix.split(" ")
+    stack = Stack()
+    for i in Chunks:
+        if CheckIfOperators(i, Operators):
+            op = Operators.get(i)
+            stack.Look()
+            Num1 = stack.Pop()
+            Num2 = stack.Pop()
+            Result = op(float(Num2), float(Num1))
+            stack.Push(Result)
+        elif any(map(str.isdigit, i)):
+            stack.Push(i)
+    Solution = stack.Pop()
+    if Solution.is_integer():
+        Solution = int(Solution)
+    print("The solution is", Solution)
+          
+Root = Node(None)
+Infix = input("enter the infix expression")
+Inserts = MakeTree(Infix, Inserts)
+for i in Inserts:
+    index = Infix.index(i)
+    Root.insert(i, index, Infix)  
+Postfix = " ".join(Root.PostorderTraversal(Root))
+print("The Postfix expression is", Postfix)
+Postfix = input("enter the Postfix expression")
+SortPostfix(Postfix, Operators)
